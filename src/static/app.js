@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
-  const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
   // Function to fetch activities from API
@@ -45,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants-container">
             ${participantsHTML}
           </div>
+            <button class="register-btn" data-activity="${name}">Register Student</button>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -60,6 +60,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".delete-btn").forEach((button) => {
         button.addEventListener("click", handleUnregister);
       });
+        // Add event listeners to register buttons
+        document.querySelectorAll(".register-btn").forEach((button) => {
+          button.addEventListener("click", handleRegister);
+        });
     } catch (error) {
       activitiesList.innerHTML =
         "<p>Failed to load activities. Please try again later.</p>";
@@ -67,6 +71,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+    // Register student handler
+    async function handleRegister(event) {
+      const activity = event.target.getAttribute("data-activity");
+      const email = prompt("Enter student email to register:");
+      if (!email) return;
+      try {
+        const response = await fetch(`/activities/${encodeURIComponent(activity)}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          messageDiv.textContent = `Registered ${email} for ${activity}!`;
+          messageDiv.className = "message success";
+          fetchActivities();
+        } else {
+          messageDiv.textContent = result.error || "Registration failed.";
+          messageDiv.className = "message error";
+        }
+      } catch (error) {
+        messageDiv.textContent = "Registration failed.";
+        messageDiv.className = "message error";
+      }
+    }
   // Handle unregister functionality
   async function handleUnregister(event) {
     const button = event.target;
